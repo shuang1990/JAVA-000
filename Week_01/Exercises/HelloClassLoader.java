@@ -6,7 +6,7 @@ import java.util.Base64;
 public class HelloClassLoader extends ClassLoader{
     public static void main(String[] args) {
         try {
-            Class helloClass = new HelloClassLoader().findClass("Hello");
+            Class<?> helloClass = new HelloClassLoader().findClass("Hello");
             Object helloInstance = helloClass.newInstance();
 
             Method helloMethod = helloClass.getMethod("hello");
