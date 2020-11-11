@@ -1,4 +1,5 @@
 import java.util.concurrent.*;
+import java.util.concurrent.locks.LockSupport;
 
 public class HomeWork {
 
@@ -118,6 +119,18 @@ public class HomeWork {
         t.join();
         result = sum();
         //------------------- 方式六结束--------------------
+
+        //------------------- 方式七开始--------------------
+        Thread t1 = new Thread(() -> {
+            sum = sum();
+            LockSupport.park();
+        });
+        t1.start();
+        LockSupport.unpark(t1);
+        result = sum;
+        //------------------- 方式七结束--------------------
+
+
 
         // 确保  拿到result 并输出
         System.out.println("异步计算结果为："+result);
