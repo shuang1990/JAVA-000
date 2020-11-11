@@ -1,16 +1,15 @@
 import java.util.concurrent.*;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.LockSupport;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class HomeWork {
 
     private static volatile int sum = 0;
 
-    public static void main(String[] args) throws ExecutionException, InterruptedException {
-
-        long start=System.currentTimeMillis();
-        // 返回结果初始化
+    public static void test1() throws ExecutionException, InterruptedException {
         int result = 0;
-        //------------------- 方式一开始--------------------
         //使用FutureTask
         Callable<Integer> task = new Callable<Integer>() {
             @Override
@@ -18,14 +17,14 @@ public class HomeWork {
                 return sum();
             }
         };
-
         FutureTask<Integer> futureTask = new FutureTask<>(task);
         new Thread(futureTask).start();
         result = futureTask.get();
-        //------------------- 方式一结束--------------------
+        System.out.println("异步计算结果为："+result);
+    }
 
-        //------------------- 方式二开始--------------------
-        //使用阻塞队列
+    public static void test2() throws InterruptedException {
+        int result = 0;
         CountDownLatch countDownLatch = new CountDownLatch(1);
         LinkedBlockingQueue<Integer> queue = new LinkedBlockingQueue<>(1);
         new Thread(() -> {
@@ -39,9 +38,12 @@ public class HomeWork {
         }).start();
         countDownLatch.await();
         result = queue.poll();
-        //------------------- 方式二结束--------------------
+        System.out.println("异步计算结果为："+result);
+    }
 
-        //------------------- 方式三开始--------------------
+    public static void test3() throws ExecutionException, InterruptedException {
+        int result = 0;
+
         class Result {
             private int result;
 
@@ -72,10 +74,10 @@ public class HomeWork {
         new Thread(futureTask1).start();
         Result result1 = futureTask1.get();
         result = result1.getResult();
-        //------------------- 方式三结束--------------------
+        System.out.println("异步计算结果为："+result);
+    }
 
-        //------------------- 方式四开始--------------------
-        //操作共享变量
+    public static void test4() throws InterruptedException {
         CountDownLatch countDownLatch1 = new CountDownLatch(1);
         class Task1 implements Runnable {
             private CountDownLatch countDownLatch;
@@ -92,11 +94,10 @@ public class HomeWork {
 
         new Thread(new Task1(countDownLatch1)).start();
         countDownLatch1.await();
-        result = sum;
-        //------------------- 方式四结束--------------------
+        System.out.println("异步计算结果为："+ sum);
+    }
 
-        //------------------- 方式五开始--------------------
-        //操作共享变量
+    public static void test5() {
         CyclicBarrier cyclicBarrier = new CyclicBarrier(1);
         new Thread(() -> {
             sum = sum();
@@ -108,34 +109,48 @@ public class HomeWork {
                 e.printStackTrace();
             }
         }).start();
-        result = sum();
-        //------------------- 方式五结束--------------------
+        System.out.println("异步计算结果为："+ sum);
+    }
 
-        //------------------- 方式六开始--------------------
+    public static void test6() throws InterruptedException {
         //使用join
         Thread t = new Thread(() -> {
             sum = sum();
         });
+        t.start();
         t.join();
-        result = sum();
-        //------------------- 方式六结束--------------------
+        System.out.println("异步计算结果为："+ sum);
+    }
 
-        //------------------- 方式七开始--------------------
+    public static void test7() {
         Thread t1 = new Thread(() -> {
             sum = sum();
             LockSupport.park();
         });
         t1.start();
         LockSupport.unpark(t1);
-        result = sum;
-        //------------------- 方式七结束--------------------
+        System.out.println("异步计算结果为："+ sum);
+    }
 
+    public static void test8() throws InterruptedException, ExecutionException {
+        CompletableFuture<Integer> f = CompletableFuture.supplyAsync(() -> {
+            return sum();
+        });
+        System.out.println("异步计算结果为："+ f.get());
+    }
 
+    public static void main(String[] args) throws ExecutionException, InterruptedException {
+        long start=System.currentTimeMillis();
+        test1();
+        test2();
+        test3();
+        test4();
+        test5();
+        test6();
+        test7();
+        test8();
 
-        // 确保  拿到result 并输出
-        System.out.println("异步计算结果为："+result);
         System.out.println("使用时间："+ (System.currentTimeMillis()-start) + " ms");
-
         // 然后退出main线程
     }
 
