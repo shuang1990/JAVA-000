@@ -2,7 +2,7 @@ import java.util.concurrent.*;
 
 public class HomeWork {
 
-    private static int sum = 0;
+    private static volatile int sum = 0;
 
     public static void main(String[] args) throws ExecutionException, InterruptedException {
 
@@ -94,6 +94,30 @@ public class HomeWork {
         result = sum;
         //------------------- 方式四结束--------------------
 
+        //------------------- 方式五开始--------------------
+        //操作共享变量
+        CyclicBarrier cyclicBarrier = new CyclicBarrier(1);
+        new Thread(() -> {
+            sum = sum();
+            try {
+                cyclicBarrier.await();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            } catch (BrokenBarrierException e) {
+                e.printStackTrace();
+            }
+        }).start();
+        result = sum();
+        //------------------- 方式五结束--------------------
+
+        //------------------- 方式六开始--------------------
+        //使用join
+        Thread t = new Thread(() -> {
+            sum = sum();
+        });
+        t.join();
+        result = sum();
+        //------------------- 方式六结束--------------------
 
         // 确保  拿到result 并输出
         System.out.println("异步计算结果为："+result);
